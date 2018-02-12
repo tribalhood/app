@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Tribal Hood</title>
+  <meta charset="UTF-8">
+  <link rel="stylesheet" href="./element-theme-chalk.css">
+  <link rel="stylesheet" href="./app.css">
+</head>
+<body>
+  <el-container id="app" v-loading="isLoading" body>
+    <el-header>
+      <el-row v-if="signedIn">
+        <el-col :span="16" :offset="4" align="center">
+          <p>Hello {{ currentUser }}!</p>
+        </el-col>
+        <el-col :span="4" align="right">
+          <el-button v-on:click="signOut">Logout</el-button>
+          <el-button type="text" @click="inactiveUsersVisible = true">View Inactive Users</el-button>
+        </el-col>
+      </el-row>
+    </el-header>
+    <el-main>
+      <el-row v-if="!signedIn">
+        <el-col :span="24" align="center">
+          <el-button type="primary" v-on:click="signIn">Sign In/Register with Google</el-button>
+          <p>Make sure you have the spreadsheet URL handy after signing in.</p>
+          <p><a href="https://github.com/tribalhood/app" target="_blank">Learn more about this project here</a>.</p>
+        </el-col>
+      </el-row>
+      <el-row v-if="signedIn && !validSpreadsheet">
+        <el-col :span="24">
+          <p>
+            <el-input
+              placeholder="What's the spreadsheet URL?"
+              v-model="spreadsheetUrl"
+              clearable>
+            </el-input>
+          </p>
+          <p><el-button type="primary" v-on:click="validateSpreadsheet">Validate</el-button></p>
+          <p>Please paste the full URL to the spreadsheet.</p>
+        </el-col>
+      </el-row>
+      <el-row v-if="signedIn && validSpreadsheet">
+        <el-col :span="24" align="center">
+          <p>Your Balance: <strong>{{ currentBalance }}</strong></p>
+          <p>Community Balance: <strong>{{ communityBalance }}</strong></p>
+          <p><el-button type="primary" @click="sendCreditsVisible = true">Send Credits</el-button></p>
+        </el-col>
+      </el-row>
+      <el-row v-if="signedIn && validSpreadsheet">
+        <el-col :span="16" :offset="4">
+          <h3>Transactions</h3>
+          <el-table
+            :data="userTransactions"
+            max-height="350"
+            empty-text="Loading..."
+            stripe>
+            <el-table-column
+              prop="date"
+              label="Date"
+              width="180"
+              align="center">
+            </el-table-column>
+            <el-table-column
+              label="Value"
+              align="center"
+              width="60">
+              <template slot-scope="scope">
+                <span>{{ Math.abs(scope.row.in) }}</span>
+              </template>
+            </el-table-column>
+            <el-table-column
+              prop="from"
+              label="Origin"
+              align="center">
+            </el-table-column>
+            <el-table-column
+              prop="user"
+              label="Destination"
+              align="center">
+            </el-table-column>
+          </el-table>
+        </el-col>
+      </el-row>
+      <el-dialog
+        title="Send Credits"
+        :visible.sync="sendCreditsVisible"
+        width="30%">
+        <p>How many?</p>
+        <p><el-input-number v-model="credits" :min="1" :max="50"></el-input-number></p>
+        <p>To whom?</p>
+        <p>
+          <el-select v-model="destination" clearable placeholder="Choose...">
+            <el-option
+              v-for="user in destinations(users)"
+              :key="user.email"
+              :label="user.email"
+              :value="user.email">
+            </el-option>
+          </el-select>
+        </p>
+        <span slot="footer" class="dialog-footer">
+          <el-button @click="sendCreditsVisible = false">Close</el-button>
+          <el-button type="primary" v-on:click="sendCredits">Send</el-button>
+        </span>
+      </el-dialog>
+      <el-dialog
+        title="Inactive Users"
+        :visible.sync="inactiveUsersVisible"
+        width="30%">
+        <el-table
+          :data="inactive(users)"
+          max-height="350"
+          empty-text="Loading..."
+          stripe>
+          <el-table-column
+            prop="email"
+            label="Email"
+            align="center">
+          </el-table-column>
+          <el-table-column
+            prop="total"
+            label="Balance"
+            align="center"
+            width="80">
+          </el-table-column>
+        </el-table>
+        <span slot="footer" class="dialog-footer">
+          <el-button type="primary" @click="inactiveUsersVisible = false">Close</el-button>
+        </span>
+      </el-dialog>
+    </el-main>
+    <el-footer>
+      <el-row v-if="signedIn && validSpreadsheet">
+        <el-col :span="12" :offset="6" align="center">
+          <el-button type="danger" plain v-on:click="deleteAccount">Delete Account</el-button>
+        </el-col>
+      </el-row>
+    </el-footer>
+  </el-container>
+</body>
+  <script defer src="./vue.min.js"></script>
+  <script defer src="./element-ui.js"></script>
+  <script defer src="./google-api.js"></script>
+  <script defer src="./app.js"></script>
+</html>
